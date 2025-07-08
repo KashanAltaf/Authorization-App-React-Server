@@ -14,13 +14,13 @@ connectDB();
 
 // ✅ CORS Setup — Correct and Minimal
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'https://authorization-app-react.vercel.app',
   credentials: true,
 }));
 
 // ✅ Handle preflight (OPTIONS) requests globally
 app.options('*', cors({
-  origin: 'http://localhost:3000',
+  origin: 'https://authorization-app-react.vercel.app',
   credentials: true,
 }));
 
