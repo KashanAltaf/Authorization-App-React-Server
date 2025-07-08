@@ -53,6 +53,14 @@ exports.login = async (req, res) => {
     if(user){
         console.log("user found");
     }
+
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: true,         // required for HTTPS (Railway uses HTTPS)
+        sameSite: 'None',     // required for cross-origin cookies
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
     // Check if user exists and password matches
     if (user && (await user.matchPassword(password))) {
       res.json({
