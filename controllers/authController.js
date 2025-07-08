@@ -44,36 +44,40 @@ exports.register = async (req, res) => {
 // @desc    Authenticate user & get token
 // @route   POST /login
 exports.login = async (req, res) => {
-    console.log("login function");
+  console.log("login function");
   const { email, password } = req.body;
-    console.log(req.body);
+  console.log(req.body);
+
   try {
-    // Check if user exists
     const user = await User.findOne({ email });
-    if(user){
-        console.log("user found");
+    if (user) {
+      console.log("user found");
     }
 
-    res.cookie('token', token, {
-        httpOnly: true,
-        secure: true,         // required for HTTPS (Railway uses HTTPS)
-        sameSite: 'None',     // required for cross-origin cookies
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
-
-    // Check if user exists and password matches
     if (user && (await user.matchPassword(password))) {
+      const token = generateToken(user._id, user.role);
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: true,         // Required for HTTPS
+        sameSite: 'None',     // For cross-origin
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+      });
+
       res.json({
         ok: true,
-        token: generateToken(user._id, user.role),
+        token: token,
       });
     } else {
       res.status(401).json({ ok: false, err: 'invalid-credentials' });
     }
+
   } catch (error) {
+    console.error("Login error:", error); // Add this to see detailed error in console
     res.status(500).json({ ok: false, err: 'server-error' });
   }
 };
+
 
 // @desc    Send OTP for password reset
 // @route   POST /send-otp
