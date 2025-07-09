@@ -4,14 +4,14 @@ const User      = require('../models/User');
 const sendEmail = require('../utils/mailer');
 const jwt       = require('jsonwebtoken');
 
-// Generate JWT
+// Generate a JWT
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: '1d',
   });
 };
 
-// @desc    Register new user
+// @desc    Register a new user
 // @route   POST /register
 exports.register = async (req, res) => {
   const { email, password, role } = req.body;
@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// @desc    Authenticate & issue token
+// @desc    Authenticate user & issue token
 // @route   POST /login
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -41,12 +41,14 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (user && await user.matchPassword(password)) {
       const token = generateToken(user._id, user.role);
+
       res.cookie('token', token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'None',
+        secure: true,     // HTTPS only
+        sameSite: 'None', // cross-site cookie
         maxAge: 24 * 60 * 60 * 1000,
       });
+
       return res.json({ ok: true, token });
     }
     return res.status(401).json({ ok: false, err: 'invalid-credentials' });
@@ -56,7 +58,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// @desc    Send OTP for reset
+// @desc    Send OTP for password reset
 // @route   POST /send-otp
 exports.sendOtp = async (req, res) => {
   const { email } = req.body;
@@ -67,7 +69,7 @@ exports.sendOtp = async (req, res) => {
     }
 
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
-    user.otp = otp;
+    user.otp        = otp;
     user.otpExpires = Date.now() + 5 * 60 * 1000;
     await user.save({ validateBeforeSave: false });
 
@@ -77,9 +79,9 @@ exports.sendOtp = async (req, res) => {
       <p>Expires in 5 minutes.</p>
     `;
     await sendEmail({
-      email: user.email,
+      email:   user.email,
       subject: 'Password Reset OTP',
-      html: message,
+      html:    message,
     });
 
     return res.json({ ok: true, msg: 'OTP sent' });
@@ -95,17 +97,17 @@ exports.verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user
-      || user.otp !== otp
-      || user.otpExpires < Date.now()
-    ) {
-      const err = !user ? 'mismatch' : (user.otpExpires < Date.now() ? 'expired' : 'invalid');
+    if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
+      const err = !user
+        ? 'mismatch'
+        : (user.otpExpires < Date.now() ? 'expired' : 'invalid');
       return res.status(400).json({ ok: false, err });
     }
 
-    user.otp = undefined;
+    user.otp        = undefined;
     user.otpExpires = undefined;
     await user.save({ validateBeforeSave: false });
+
     return res.json({ ok: true, msg: 'OTP verified' });
   } catch (error) {
     console.error('verifyOtp error:', error);
@@ -128,6 +130,7 @@ exports.resetPassword = async (req, res) => {
 
     user.password = newPassword;
     await user.save();
+
     return res.json({ ok: true, msg: 'Password has been reset' });
   } catch (error) {
     console.error('resetPassword error:', error);
