@@ -1,37 +1,34 @@
 // server.js
 require('dotenv').config();
 const express       = require('express');
+const cors          = require('cors'); // Import the cors package
 const connectDB     = require('./config/db');
 const authRoutes    = require('./routes/authRoutes');
 
 const app = express();
 connectDB();
 
-// ─── Manual CORS ──────────────────────────────────────────────────────────────
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowed = [
-    'http://localhost:3000',
-    'https://authorization-app-react.vercel.app'
-  ];
+// ─── CORS Configuration ───────────────────────────────────────────────────────
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://authorization-app-react.vercel.app'
+];
 
-  if (allowed.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests from the allowed origins or requests with no origin (like Postman/curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // This is crucial for allowing cookies and credentials
+};
 
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'Content-Type,Authorization'
-  );
+app.use(cors(corsOptions)); // Use the cors middleware
 
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
+// Remove your old manual app.use((req, res, next) => { ... }) block
 // ────────────────────────────────────────────────────────────────────────────────
 
 app.use(express.json());
