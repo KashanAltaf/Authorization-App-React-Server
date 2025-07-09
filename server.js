@@ -1,41 +1,43 @@
 // server.js
-
 require('dotenv').config();
-const express    = require('express');
-const cors       = require('cors');
-const connectDB  = require('./config/db');
-const authRoutes = require('./routes/authRoutes');
+const express       = require('express');
+const connectDB     = require('./config/db');
+const authRoutes    = require('./routes/authRoutes');
 
 const app = express();
 connectDB();
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://authorization-app-react.vercel.app',
-];
+// ─── Manual CORS ──────────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowed = [
+    'http://localhost:3000',
+    'https://authorization-app-react.vercel.app'
+  ];
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    // allow tools like Postman or same‑site requests without origin
-    if (!origin) return callback(null, true);
+  if (allowed.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
 
-    if (allowedOrigins.includes(origin)) {
-      // echo back the requesting origin
-      return callback(null, origin);
-    }
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  optionsSuccessStatus: 204,
-};
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type,Authorization'
+  );
 
-// **Apply this once** before any body‑parsing or routes
-app.use(cors(corsOptions));
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+// ────────────────────────────────────────────────────────────────────────────────
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// your auth routes
+// Mount auth routes
 app.use('/', authRoutes);
 
 const PORT = process.env.PORT || 5000;

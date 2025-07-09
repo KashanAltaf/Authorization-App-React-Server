@@ -1,5 +1,6 @@
+// routes/authRoutes.js
 const express = require('express');
-const router = express.Router();
+const router  = express.Router();
 const {
   register,
   login,
@@ -8,11 +9,11 @@ const {
   resetPassword
 } = require('../controllers/authController');
 
-// Define authentication routes
-router.post('/register', register);
-router.post('/login', login);
-router.post('/send-otp', sendOtp);
-router.post('/verify-otp', verifyOtp);
+// Auth endpoints
+router.post('/register',      register);
+router.post('/login',         login);
+router.post('/send-otp',      sendOtp);
+router.post('/verify-otp',    verifyOtp);
 router.post('/reset_password', resetPassword);
 
 module.exports = router;
