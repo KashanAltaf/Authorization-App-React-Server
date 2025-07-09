@@ -20,12 +20,15 @@ const allowedOrigins = [
 
 // ✅ CORS middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+  origin: (origin, callback) => {
+    if (!origin) {
+      return callback(null, true);
+    } 
+    if (origin === 'https://authorization-app-react.vercel.app') {
+      return callback(null, origin);
     }
+    
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
 }));
@@ -39,6 +42,7 @@ app.options('*', cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
+  origin: 'https://authorization-app-react.vercel.app',
   credentials: true,
 }));
 
