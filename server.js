@@ -1,8 +1,9 @@
 // server.js
+
 require('dotenv').config();
-const express = require('express');
-const cors    = require('cors');
-const connectDB = require('./config/db');
+const express    = require('express');
+const cors       = require('cors');
+const connectDB  = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 
 const app = express();
@@ -15,27 +16,26 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow non-browser requests (Postman, mobile apps)
+    // allow tools like Postman or same‑site requests without origin
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
-      // Echo back the exact origin
+      // echo back the requesting origin
       return callback(null, origin);
     }
-
     callback(new Error('Not allowed by CORS'));
   },
-  credentials: true,            // <- required for cookies
+  credentials: true,
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  optionsSuccessStatus: 204,    // some legacy browsers choke on 204
+  optionsSuccessStatus: 204,
 };
 
-// Apply it _before_ body-parsers & routes
+// **Apply this once** before any body‑parsing or routes
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Now your routes:
+// your auth routes
 app.use('/', authRoutes);
 
 const PORT = process.env.PORT || 5000;
